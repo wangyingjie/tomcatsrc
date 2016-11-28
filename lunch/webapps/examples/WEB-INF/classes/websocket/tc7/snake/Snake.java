@@ -16,13 +16,13 @@
  */
 package websocket.tc7.snake;
 
+import org.apache.catalina.websocket.WsOutbound;
+
 import java.io.IOException;
 import java.nio.CharBuffer;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
-
-import org.apache.catalina.websocket.WsOutbound;
 
 /**
  * @deprecated See {@link websocket.snake.Snake}
