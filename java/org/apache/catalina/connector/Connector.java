@@ -16,13 +16,6 @@
  */
 package org.apache.catalina.connector;
 
-import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-
-import javax.management.ObjectName;
-
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Service;
@@ -37,12 +30,26 @@ import org.apache.tomcat.util.IntrospectionUtils;
 import org.apache.tomcat.util.http.mapper.Mapper;
 import org.apache.tomcat.util.res.StringManager;
 
+import javax.management.ObjectName;
+import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+
 
 /**
  * Implementation of a Coyote connector.
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
+ *
+ * 用于将请求封装成为 Request、Response
+ *
+ * 同时实现了：http 、tcp/ip 协议
+ *
+ * 底层使用的 socket 通讯模型
+ *
+ * Connector 的生命周期是在 Service 中调用的
  */
 public class Connector extends LifecycleMBeanBase  {
 
@@ -63,9 +70,13 @@ public class Connector extends LifecycleMBeanBase  {
     }
 
     public Connector(String protocol) {
+
+        // 指定 协议
         setProtocol(protocol);
         // Instantiate protocol handler
         try {
+
+            // Connector 自身在创建的时候会创建  Http11Protocol  http 的Handler处理类
             Class<?> clazz = Class.forName(protocolHandlerClassName);
             this.protocolHandler = (ProtocolHandler) clazz.newInstance();
         } catch (Exception e) {
@@ -214,6 +225,8 @@ public class Connector extends LifecycleMBeanBase  {
 
     /**
      * Coyote protocol handler.
+     * 具体处理请求
+     * 有多种链接类型：io、nio …… 每一个实现类代表一个类型
      */
     protected ProtocolHandler protocolHandler = null;
 
@@ -960,6 +973,7 @@ public class Connector extends LifecycleMBeanBase  {
 
         // Initialize adapter
         adapter = new CoyoteAdapter(this);
+        // 设置Adapter
         protocolHandler.setAdapter(adapter);
 
         // Make sure parseBodyMethodsSet has a default
@@ -975,6 +989,8 @@ public class Connector extends LifecycleMBeanBase  {
         }
 
         try {
+
+            // 调用 protocolHandler 的init方法
             protocolHandler.init();
         } catch (Exception e) {
             throw new LifecycleException
@@ -1004,6 +1020,8 @@ public class Connector extends LifecycleMBeanBase  {
         setState(LifecycleState.STARTING);
 
         try {
+
+            // 调用 protocolHandler 的start方法  Connector的生命周期都调用了protocolHandler的相关方法
             protocolHandler.start();
         } catch (Exception e) {
             String errPrefix = "";
@@ -1031,6 +1049,8 @@ public class Connector extends LifecycleMBeanBase  {
         setState(LifecycleState.STOPPING);
 
         try {
+
+            // 调用 protocolHandler 的stop方法
             protocolHandler.stop();
         } catch (Exception e) {
             throw new LifecycleException
@@ -1047,6 +1067,7 @@ public class Connector extends LifecycleMBeanBase  {
         mapperListener.destroy();
 
         try {
+            // 调用 protocolHandler 的destroy方法
             protocolHandler.destroy();
         } catch (Exception e) {
             throw new LifecycleException
@@ -1055,6 +1076,7 @@ public class Connector extends LifecycleMBeanBase  {
         }
 
         if (getService() != null) {
+            //从Service中移除当前的Connector
             getService().removeConnector(this);
         }
 

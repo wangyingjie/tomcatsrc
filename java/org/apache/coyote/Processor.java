@@ -17,47 +17,57 @@
 
 package org.apache.coyote;
 
-import java.io.IOException;
-import java.util.concurrent.Executor;
-
 import org.apache.coyote.http11.upgrade.servlet31.HttpUpgradeHandler;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.SSLSupport;
 import org.apache.tomcat.util.net.SocketStatus;
 import org.apache.tomcat.util.net.SocketWrapper;
 
+import java.io.IOException;
+import java.util.concurrent.Executor;
+
 
 /**
  * Common interface for processors of all protocols.
+ * <p>
+ * Tcp  的请求处理接口
  */
 public interface Processor<S> {
+
+    // 获取执行线程池
     Executor getExecutor();
 
+    //处理请求
     SocketState process(SocketWrapper<S> socketWrapper) throws IOException;
 
     SocketState event(SocketStatus status) throws IOException;
 
     SocketState asyncDispatch(SocketStatus status);
+
     SocketState asyncPostProcess();
 
     /**
-     * @deprecated  Will be removed in Tomcat 8.0.x.
+     * @deprecated Will be removed in Tomcat 8.0.x.
      */
     @Deprecated
     org.apache.coyote.http11.upgrade.UpgradeInbound getUpgradeInbound();
+
     /**
-     * @deprecated  Will be removed in Tomcat 8.0.x.
+     * @deprecated Will be removed in Tomcat 8.0.x.
      */
     @Deprecated
     SocketState upgradeDispatch() throws IOException;
 
     HttpUpgradeHandler getHttpUpgradeHandler();
+
     SocketState upgradeDispatch(SocketStatus status) throws IOException;
-    
+
     void errorDispatch();
 
     boolean isComet();
+
     boolean isAsync();
+
     boolean isUpgrade();
 
     Request getRequest();

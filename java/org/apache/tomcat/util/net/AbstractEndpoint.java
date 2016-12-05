@@ -43,6 +43,8 @@ import org.apache.tomcat.util.threads.ThreadPoolExecutor;
  * @author fhanik
  * @author Mladen Turk
  * @author Remy Maucherat
+ *
+ * 用来处理底层 socket 链接
  */
 public abstract class AbstractEndpoint<S> {
 
@@ -659,6 +661,7 @@ public abstract class AbstractEndpoint<S> {
     public abstract void startInternal() throws Exception;
     public abstract void stopInternal() throws Exception;
 
+    // Endpoint 初始化
     public final void init() throws Exception {
         testServerCipherSuitesOrderSupport();
         if (bindOnInit) {

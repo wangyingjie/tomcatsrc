@@ -17,27 +17,15 @@
 package org.apache.catalina.core;
 
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.regex.Pattern;
-
-import org.apache.catalina.Container;
-import org.apache.catalina.Context;
-import org.apache.catalina.Globals;
-import org.apache.catalina.Host;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleEvent;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleListener;
-import org.apache.catalina.Valve;
+import org.apache.catalina.*;
 import org.apache.catalina.loader.WebappClassLoaderBase;
 import org.apache.catalina.mbeans.MBeanUtils;
 import org.apache.catalina.valves.ValveBase;
 import org.apache.tomcat.util.ExceptionUtils;
+
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.regex.Pattern;
 
 
 /**
@@ -792,8 +780,10 @@ public class StandardHost extends ContainerBase implements Host {
     @Override
     protected synchronized void startInternal() throws LifecycleException {
 
+        // 管道中没有错误则将其加入管道
         // Set error report valve
         String errorValve = getErrorReportValveClass();
+
         if ((errorValve != null) && (!errorValve.equals(""))) {
             try {
                 boolean found = false;

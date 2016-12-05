@@ -36,6 +36,12 @@ package org.apache.catalina;
  *
  * @author Craig R. McClanahan
  * @author Peter Donald
+ *
+ * 实现分为：（1）、生命周期管理；（2）、处理请求  两部都会走Pipeline的责任链处理模式
+ *
+ * 只要一个默认的实现类：StandardPipeline
+ *
+ * @see org.apache.catalina.core.StandardPipeline
  */
 public interface Pipeline {
 

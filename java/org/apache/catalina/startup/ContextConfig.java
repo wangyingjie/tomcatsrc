@@ -16,64 +16,13 @@
  */
 package org.apache.catalina.startup;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.JarURLConnection;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.naming.Binding;
-import javax.naming.NameNotFoundException;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.servlet.ServletContainerInitializer;
-import javax.servlet.ServletContext;
-import javax.servlet.annotation.HandlesTypes;
-
 import org.apache.catalina.Authenticator;
-import org.apache.catalina.Container;
-import org.apache.catalina.Context;
-import org.apache.catalina.Engine;
-import org.apache.catalina.Globals;
-import org.apache.catalina.Host;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleEvent;
-import org.apache.catalina.LifecycleListener;
-import org.apache.catalina.Pipeline;
-import org.apache.catalina.Server;
-import org.apache.catalina.Service;
-import org.apache.catalina.Valve;
-import org.apache.catalina.Wrapper;
+import org.apache.catalina.*;
 import org.apache.catalina.core.ContainerBase;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.core.StandardEngine;
 import org.apache.catalina.core.StandardHost;
-import org.apache.catalina.deploy.ErrorPage;
-import org.apache.catalina.deploy.FilterDef;
-import org.apache.catalina.deploy.FilterMap;
-import org.apache.catalina.deploy.LoginConfig;
-import org.apache.catalina.deploy.SecurityConstraint;
-import org.apache.catalina.deploy.ServletDef;
-import org.apache.catalina.deploy.WebXml;
+import org.apache.catalina.deploy.*;
 import org.apache.catalina.util.ContextName;
 import org.apache.catalina.util.Introspection;
 import org.apache.juli.logging.Log;
@@ -84,14 +33,7 @@ import org.apache.naming.resources.ResourceAttributes;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.JarScannerCallback;
 import org.apache.tomcat.util.ExceptionUtils;
-import org.apache.tomcat.util.bcel.classfile.AnnotationElementValue;
-import org.apache.tomcat.util.bcel.classfile.AnnotationEntry;
-import org.apache.tomcat.util.bcel.classfile.ArrayElementValue;
-import org.apache.tomcat.util.bcel.classfile.ClassFormatException;
-import org.apache.tomcat.util.bcel.classfile.ClassParser;
-import org.apache.tomcat.util.bcel.classfile.ElementValue;
-import org.apache.tomcat.util.bcel.classfile.ElementValuePair;
-import org.apache.tomcat.util.bcel.classfile.JavaClass;
+import org.apache.tomcat.util.bcel.classfile.*;
 import org.apache.tomcat.util.buf.UriUtil;
 import org.apache.tomcat.util.descriptor.DigesterFactory;
 import org.apache.tomcat.util.descriptor.InputSourceUtil;
@@ -103,6 +45,18 @@ import org.apache.tomcat.util.scan.Jar;
 import org.apache.tomcat.util.scan.JarFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
+
+import javax.naming.Binding;
+import javax.naming.NameNotFoundException;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.servlet.ServletContainerInitializer;
+import javax.servlet.ServletContext;
+import javax.servlet.annotation.HandlesTypes;
+import java.io.*;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Startup event listener for a <b>Context</b> that configures the properties
@@ -371,6 +325,8 @@ public class ContextConfig implements LifecycleListener {
      * Process events for an associated Context.
      *
      * @param event The lifecycle event that has occurred
+     *
+     * 事件驱动
      */
     @Override
     public void lifecycleEvent(LifecycleEvent event) {
@@ -385,6 +341,8 @@ public class ContextConfig implements LifecycleListener {
 
         // Process the event that has occurred
         if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
+
+            // 解析 Web.xml 配置文件
             configureStart();
         } else if (event.getType().equals(Lifecycle.BEFORE_START_EVENT)) {
             beforeStart();
@@ -1224,7 +1182,7 @@ public class ContextConfig implements LifecycleListener {
      * using the rules defined in the spec. For the global web.xml files,
      * where there is duplicate configuration, the most specific level wins. ie
      * an application's web.xml takes precedence over the host level or global
-     * web.xml file.
+     * web.xml file.   解析 web.xml 配置文件
      */
     protected void webConfig() {
         /*

@@ -16,20 +16,6 @@
  */
 package org.apache.coyote;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.management.MBeanRegistration;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
 import org.apache.coyote.http11.upgrade.servlet31.HttpUpgradeHandler;
 import org.apache.coyote.http11.upgrade.servlet31.WebConnection;
 import org.apache.juli.logging.Log;
@@ -41,6 +27,23 @@ import org.apache.tomcat.util.net.SocketStatus;
 import org.apache.tomcat.util.net.SocketWrapper;
 import org.apache.tomcat.util.res.StringManager;
 
+import javax.management.MBeanRegistration;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+/**
+ * 该类里面包含了 3 个重要的组件：EndPoint、Processor（用于将socket封装成request）、Adapter（将request请求交给Container处理）
+ * @param <S>
+ */
 public abstract class AbstractProtocol<S> implements ProtocolHandler,
         MBeanRegistration {
 
@@ -121,12 +124,19 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
     /**
      * The adapter provides the link between the ProtocolHandler and the
      * connector.
+     *
+     * 将 request 交给Container 处理请求
      */
     protected Adapter adapter;
     @Override
-    public void setAdapter(Adapter adapter) { this.adapter = adapter; }
+    public void setAdapter(Adapter adapter) {
+        this.adapter = adapter;
+    }
+
     @Override
-    public Adapter getAdapter() { return adapter; }
+    public Adapter getAdapter() {
+        return adapter;
+    }
 
 
     /**
@@ -449,6 +459,8 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         endpoint.setName(endpointName.substring(1, endpointName.length()-1));
 
         try {
+
+            // 网络 socket 处理初始化
             endpoint.init();
         } catch (Exception ex) {
             getLog().error(sm.getString("abstractProtocolHandler.initError",
@@ -571,9 +583,9 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         }
 
 
+        // 请求Tcp/Ip 协议转为 Http 协议的处理类
         @SuppressWarnings("deprecation") // Old HTTP upgrade method has been deprecated
-        public SocketState process(SocketWrapper<S> wrapper,
-                SocketStatus status) {
+        public SocketState process(SocketWrapper<S> wrapper, SocketStatus status) {
             if (wrapper == null) {
                 // Nothing to do. Socket has been closed.
                 return SocketState.CLOSED;

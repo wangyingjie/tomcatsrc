@@ -16,30 +16,8 @@
  */
 package org.apache.coyote.http11;
 
-import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.util.Locale;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.coyote.AbstractProcessor;
-import org.apache.coyote.ActionCode;
-import org.apache.coyote.AsyncContextCallback;
-import org.apache.coyote.ErrorState;
-import org.apache.coyote.RequestInfo;
-import org.apache.coyote.http11.filters.BufferedInputFilter;
-import org.apache.coyote.http11.filters.ChunkedInputFilter;
-import org.apache.coyote.http11.filters.ChunkedOutputFilter;
-import org.apache.coyote.http11.filters.GzipOutputFilter;
-import org.apache.coyote.http11.filters.IdentityInputFilter;
-import org.apache.coyote.http11.filters.IdentityOutputFilter;
-import org.apache.coyote.http11.filters.SavedRequestInputFilter;
-import org.apache.coyote.http11.filters.VoidInputFilter;
-import org.apache.coyote.http11.filters.VoidOutputFilter;
+import org.apache.coyote.*;
+import org.apache.coyote.http11.filters.*;
 import org.apache.coyote.http11.upgrade.servlet31.HttpUpgradeHandler;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.Ascii;
@@ -54,6 +32,15 @@ import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.SocketStatus;
 import org.apache.tomcat.util.net.SocketWrapper;
 import org.apache.tomcat.util.res.StringManager;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.util.Locale;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
@@ -961,6 +948,10 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
      *               and the HTTP responses will be written.
      *
      * @throws IOException error during an I/O operation
+     *
+     * 执行 process 请求处理
+     *
+     * 内部会调用 Adapter的service方法主要是调用Container管道中的 invoker 方法来处理请求
      */
     @Override
     public SocketState process(SocketWrapper<S> socketWrapper)
@@ -989,6 +980,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             socketWrapper.setKeepAliveLeft(0);
         }
 
+        // 处理 request 、response 相关请求、响应属性
         while (!getErrorState().isError() && keepAlive && !comet && !isAsync() &&
                 upgradeInbound == null &&
                 httpUpgradeHandler == null && !endpoint.isPaused()) {
@@ -1084,6 +1076,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             if (!getErrorState().isError()) {
                 try {
                     rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
+
+                    // todo 重要：调用Adapter由Tcp-->Http转换，完成servlet调用
                     adapter.service(request, response);
                     // Handle when the response was committed before a serious
                     // error occurred.  Throwing a ServletException should both
@@ -1146,6 +1140,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             if (getErrorState().isError()) {
                 response.setStatus(500);
             }
+
+            // 更新 request
             request.updateCounters();
 
             if (!isAsync() && !comet || getErrorState().isError()) {

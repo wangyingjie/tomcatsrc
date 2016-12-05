@@ -16,16 +16,6 @@
  */
 package org.apache.catalina.connector;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.util.EnumSet;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.SessionTrackingMode;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.catalina.Authenticator;
 import org.apache.catalina.Context;
 import org.apache.catalina.Host;
@@ -51,6 +41,15 @@ import org.apache.tomcat.util.http.ServerCookie;
 import org.apache.tomcat.util.net.SSLSupport;
 import org.apache.tomcat.util.net.SocketStatus;
 import org.apache.tomcat.util.res.StringManager;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.SessionTrackingMode;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.util.EnumSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -88,6 +87,8 @@ public class CoyoteAdapter implements Adapter {
      * Construct a new CoyoteProcessor associated with the specified connector.
      *
      * @param connector CoyoteConnector that owns this processor
+     *
+     * Coyote 英 [kaɪ'əʊtɪ] n. 一种产于北美大草原的小狼
      */
     public CoyoteAdapter(Connector connector) {
 
@@ -448,6 +449,9 @@ public class CoyoteAdapter implements Adapter {
             if (postParseSuccess) {
                 //check valves if we support async
                 request.setAsyncSupported(connector.getService().getContainer().getPipeline().isAsyncSupported());
+
+                // 最终执行都调用到 BaseValue 相关的处理类
+                // todo 最终执行了 Service-->Container-->Pipeline-->invoke
                 // Calling the container
                 connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);
 

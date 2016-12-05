@@ -18,47 +18,7 @@
 
 package org.apache.catalina.core;
 
-import java.io.PrintStream;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Stack;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javax.management.ListenerNotFoundException;
-import javax.management.MBeanNotificationInfo;
-import javax.management.Notification;
-import javax.management.NotificationBroadcasterSupport;
-import javax.management.NotificationEmitter;
-import javax.management.NotificationFilter;
-import javax.management.NotificationListener;
-import javax.management.ObjectName;
-import javax.servlet.MultipartConfigElement;
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.ServletSecurityElement;
-import javax.servlet.SingleThreadModel;
-import javax.servlet.UnavailableException;
-import javax.servlet.annotation.MultipartConfig;
-import javax.servlet.annotation.ServletSecurity;
-
-import org.apache.catalina.Container;
-import org.apache.catalina.ContainerServlet;
-import org.apache.catalina.Context;
-import org.apache.catalina.Globals;
-import org.apache.catalina.InstanceEvent;
-import org.apache.catalina.InstanceListener;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.Wrapper;
+import org.apache.catalina.*;
 import org.apache.catalina.mbeans.MBeanUtils;
 import org.apache.catalina.security.SecurityUtil;
 import org.apache.catalina.util.InstanceSupport;
@@ -70,6 +30,16 @@ import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.log.SystemLogHandler;
 import org.apache.tomcat.util.modeler.Registry;
 import org.apache.tomcat.util.modeler.Util;
+
+import javax.management.*;
+import javax.servlet.*;
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.ServletSecurity;
+import java.io.PrintStream;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Standard implementation of the <b>Wrapper</b> interface that represents
@@ -1266,6 +1236,8 @@ public class StandardWrapper extends ContainerBase
                     }
                 }
             } else {
+
+                // 初始化 servlet
                 servlet.init(facade);
             }
 
@@ -1793,12 +1765,15 @@ public class StandardWrapper extends ContainerBase
             Notification notification = new Notification("j2ee.state.starting", 
                                                         this.getObjectName(), 
                                                         sequenceNumber++);
+           //由于  jmx 发布broadcaster 通知
             broadcaster.sendNotification(notification);
         }
-        
+
+        // 调用了 父类的 startInteral 方法
         // Start up this component
         super.startInternal();
 
+        // 让 servlet 可用
         setAvailable(0L);
 
         // Send j2ee.state.running notification 

@@ -19,19 +19,6 @@
 package org.apache.catalina.core;
 
 
-import java.io.IOException;
-import java.security.Principal;
-import java.security.PrivilegedActionException;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.catalina.Globals;
 import org.apache.catalina.InstanceEvent;
 import org.apache.catalina.comet.CometEvent;
@@ -43,6 +30,13 @@ import org.apache.catalina.util.InstanceSupport;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.security.Principal;
+import java.security.PrivilegedActionException;
+
 /**
  * Implementation of <code>javax.servlet.FilterChain</code> used to manage
  * the execution of a set of filters for a particular request.  When the
@@ -51,6 +45,8 @@ import org.apache.tomcat.util.res.StringManager;
  * method itself.
  *
  * @author Craig R. McClanahan
+ *
+ * 该类会执行到应用中配置的：Filter、Servlet
  */
 final class ApplicationFilterChain implements FilterChain, CometFilterChain {
 
@@ -209,6 +205,18 @@ final class ApplicationFilterChain implements FilterChain, CometFilterChain {
         }
     }
 
+    /**
+     * 该方法主要做2件事：
+     * （1）、执行过滤器  Filter.doFilter 方法
+     * （2）、执行  Servlet.service 方法
+     *
+     *  源代码写的真烂！！！！！
+     *
+     * @param request
+     * @param response
+     * @throws IOException
+     * @throws ServletException
+     */
     private void internalDoFilter(ServletRequest request, 
                                   ServletResponse response)
         throws IOException, ServletException {
@@ -217,6 +225,8 @@ final class ApplicationFilterChain implements FilterChain, CometFilterChain {
         if (pos < n) {
             ApplicationFilterConfig filterConfig = filters[pos++];
             Filter filter = null;
+
+            // todo 调用 Filter 的 doFilter 方法
             try {
                 filter = filterConfig.getFilter();
                 support.fireInstanceEvent(InstanceEvent.BEFORE_FILTER_EVENT,
@@ -270,6 +280,7 @@ final class ApplicationFilterChain implements FilterChain, CometFilterChain {
             return;
         }
 
+        // todo 调用 Servlet 的 service 方法
         // We fell off the end of the chain -- call the servlet instance
         try {
             if (ApplicationDispatcher.WRAP_SAME_OBJECT) {
@@ -284,6 +295,9 @@ final class ApplicationFilterChain implements FilterChain, CometFilterChain {
                 request.setAttribute(Globals.ASYNC_SUPPORTED_ATTR,
                         Boolean.FALSE);
             }
+
+
+            // todo 会执行 Servlet 的 service 方法
             // Use potentially wrapped request from this point
             if ((request instanceof HttpServletRequest) &&
                 (response instanceof HttpServletResponse)) {

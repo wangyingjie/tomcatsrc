@@ -16,23 +16,18 @@
  */
 package org.apache.coyote.http11;
 
-import java.io.IOException;
-import java.nio.channels.SocketChannel;
-import java.util.Iterator;
-
 import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.Processor;
 import org.apache.coyote.http11.upgrade.NioProcessor;
 import org.apache.coyote.http11.upgrade.servlet31.HttpUpgradeHandler;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.net.AbstractEndpoint;
-import org.apache.tomcat.util.net.NioChannel;
-import org.apache.tomcat.util.net.NioEndpoint;
+import org.apache.tomcat.util.net.*;
 import org.apache.tomcat.util.net.NioEndpoint.Handler;
-import org.apache.tomcat.util.net.SSLImplementation;
-import org.apache.tomcat.util.net.SecureNioChannel;
-import org.apache.tomcat.util.net.SocketWrapper;
+
+import java.io.IOException;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
 
 
 /**
@@ -43,6 +38,8 @@ import org.apache.tomcat.util.net.SocketWrapper;
  * @author Remy Maucherat
  * @author Costin Manolache
  * @author Filip Hanik
+ *
+ * 生命周期方法主要调用 Endpoint 的生命周期处理方法
  */
 public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
 
@@ -60,7 +57,11 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
 
 
     public Http11NioProtocol() {
-        endpoint=new NioEndpoint();
+
+        // endpoint 负责网络链接
+        endpoint = new NioEndpoint();
+
+        // 属于内部类
         cHandler = new Http11ConnectionHandler(this);
         ((NioEndpoint) endpoint).setHandler(cHandler);
         setSoLinger(Constants.DEFAULT_CONNECTION_LINGER);

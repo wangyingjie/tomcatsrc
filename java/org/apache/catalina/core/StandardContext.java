@@ -5341,6 +5341,9 @@ public class StandardContext extends ContainerBase
      *
      * @param children Array of wrappers for all currently defined
      *  servlets (including those not declared load on startup)
+     *
+     *  web.xml 中配置的 servlet 会被包装成：StandardWrapper
+     *  一对一的包装
      */
     public boolean loadOnStartup(Container children[]) {
 
@@ -5365,6 +5368,8 @@ public class StandardContext extends ContainerBase
         for (ArrayList<Wrapper> list : map.values()) {
             for (Wrapper wrapper : list) {
                 try {
+
+                    // 调用servlet的初始化
                     wrapper.load();
                 } catch (ServletException e) {
                     getLogger().error(sm.getString("standardContext.loadOnStartup.loadException",
@@ -5390,6 +5395,8 @@ public class StandardContext extends ContainerBase
      *
      * @exception LifecycleException if this component detects a fatal error
      *  that prevents this component from being used
+     *
+     *  方法的逻辑写的真乱！！！！
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {
@@ -5631,6 +5638,8 @@ public class StandardContext extends ContainerBase
 
             // Configure and call application event listeners
             if (ok) {
+
+                // 启动所有的 web.xml 中配置的 listener
                 if (!listenerStart()) {
                     log.error(sm.getString("standardContext.listenerFail"));
                     ok = false;
@@ -5649,6 +5658,8 @@ public class StandardContext extends ContainerBase
 
             // Configure and call application filters
             if (ok) {
+
+               // 启动所有的 web.xml 中配置的 filter
                 if (!filterStart()) {
                     log.error(sm.getString("standardContext.filterFail"));
                     ok = false;

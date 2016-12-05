@@ -17,6 +17,15 @@
 
 package org.apache.tomcat.util.net;
 
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.tomcat.util.IntrospectionUtils;
+import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
+import org.apache.tomcat.util.net.SecureNioChannel.ApplicationBufferHandler;
+import org.apache.tomcat.util.net.jsse.NioX509KeyManager;
+
+import javax.net.ssl.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,13 +34,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
-import java.nio.channels.CancelledKeyException;
-import java.nio.channels.FileChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.nio.channels.WritableByteChannel;
+import java.nio.channels.*;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Locale;
@@ -42,20 +45,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLSessionContext;
-import javax.net.ssl.X509KeyManager;
-
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.ExceptionUtils;
-import org.apache.tomcat.util.IntrospectionUtils;
-import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
-import org.apache.tomcat.util.net.SecureNioChannel.ApplicationBufferHandler;
-import org.apache.tomcat.util.net.jsse.NioX509KeyManager;
 
 /**
  * NIO tailored thread pool, providing the following services:
@@ -469,6 +458,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
     @Override
     public void bind() throws Exception {
 
+        // 首先初始化了 ServerSocketChannel
         serverSock = ServerSocketChannel.open();
         socketProperties.setProperties(serverSock.socket());
         InetSocketAddress addr = (getAddress()!=null?new InetSocketAddress(getAddress(),getPort()):new InetSocketAddress(getPort()));
@@ -476,19 +466,19 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
         serverSock.configureBlocking(true); //mimic APR behavior
         serverSock.socket().setSoTimeout(getSocketProperties().getSoTimeout());
 
-        // Initialize thread count defaults for acceptor, poller
+        // Initialize thread count defaults for acceptor, poller  acceptor 线程数
         if (acceptorThreadCount == 0) {
             // FIXME: Doesn't seem to work that well with multiple accept threads
             acceptorThreadCount = 1;
         }
-        if (pollerThreadCount <= 0) {
+        if (pollerThreadCount <= 0) {//poller 线程的个数
             //minimum one poller thread
             pollerThreadCount = 1;
         }
         stopLatch = new CountDownLatch(pollerThreadCount);
 
         // Initialize SSL if needed
-        if (isSSLEnabled()) {
+        if (isSSLEnabled()) {//如果需要则初始化 ssl
             SSLUtil sslUtil = handler.getSslImplementation().getSSLUtil(this);
 
             sslContext = sslUtil.createSSLContext();
@@ -506,6 +496,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
         }
 
         if (oomParachute>0) reclaimParachute(true);
+
+        // 打开链接
         selectorPool.open();
     }
 
@@ -540,11 +532,14 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
 
             // Create worker collection
             if ( getExecutor() == null ) {
+
+                // 创建工作线程池 Executor
                 createExecutor();
             }
 
             initializeConnectionLatch();
 
+            // 启动 poller 线程
             // Start poller threads
             pollers = new Poller[getPollerThreadCount()];
             for (int i=0; i<pollers.length; i++) {
@@ -555,6 +550,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 pollerThread.start();
             }
 
+            // 启动线程
             startAcceptorThreads();
         }
     }

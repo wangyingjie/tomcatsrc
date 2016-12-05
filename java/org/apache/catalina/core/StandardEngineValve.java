@@ -19,17 +19,16 @@
 package org.apache.catalina.core;
 
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.catalina.Host;
 import org.apache.catalina.comet.CometEvent;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ValveBase;
 import org.apache.tomcat.util.res.StringManager;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 
 /**
@@ -112,6 +111,7 @@ final class StandardEngineValve
             request.setAsyncSupported(host.getPipeline().isAsyncSupported());
         }
 
+        // 责任链模式：将请求传递给 Host 管道
         // Ask this Host to process this request
         host.getPipeline().getFirst().invoke(request, response);
 

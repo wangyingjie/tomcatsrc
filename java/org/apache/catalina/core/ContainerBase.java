@@ -1115,8 +1115,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase
 
         // 启动管道
         // Start the Valves in our pipeline (including the basic), if any
-        if (pipeline instanceof Lifecycle)
+        if (pipeline instanceof Lifecycle) {
+            // 管道责任链启动
             ((Lifecycle) pipeline).start();
+        }
 
 
         // 设置生命周期

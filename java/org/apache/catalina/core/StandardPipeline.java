@@ -19,22 +19,15 @@
 package org.apache.catalina.core;
 
 
-import java.util.ArrayList;
-
-import javax.management.ObjectName;
-
-import org.apache.catalina.Contained;
-import org.apache.catalina.Container;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.Pipeline;
-import org.apache.catalina.Valve;
+import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleBase;
 import org.apache.catalina.valves.ValveBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
+
+import javax.management.ObjectName;
+import java.util.ArrayList;
 
 
 /**
@@ -180,12 +173,15 @@ public class StandardPipeline extends LifecycleBase
         if (current == null) {
             current = basic;
         }
+
+        // 循环执行 每一个 Lifecycle 的start 方法
         while (current != null) {
             if (current instanceof Lifecycle)
                 ((Lifecycle) current).start();
             current = current.getNext();
         }
 
+        // 设置生命周期状态
         setState(LifecycleState.STARTING);
     }
 
@@ -337,6 +333,8 @@ public class StandardPipeline extends LifecycleBase
      *  associated with this Container
      * @exception IllegalStateException if the specified Valve is already
      *  associated with a different Container
+     *
+     *  责任链添加处理Value
      */
     @Override
     public void addValve(Valve valve) {
@@ -380,6 +378,8 @@ public class StandardPipeline extends LifecycleBase
      * Return the set of Valves in the pipeline associated with this
      * Container, including the basic Valve (if any).  If there are no
      * such Valves, a zero-length array is returned.
+     *
+     * 获取所有的 Value
      */
     @Override
     public Valve[] getValves() {
