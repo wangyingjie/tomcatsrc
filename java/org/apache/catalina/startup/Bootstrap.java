@@ -53,7 +53,7 @@ public final class Bootstrap {
 
 
     /**
-     * Daemon object used by main.
+     * Daemon object used by main. ['diːmən]  n. 守护进程；后台程序
      */
     private static Bootstrap daemon = null;
 
@@ -196,6 +196,7 @@ public final class Bootstrap {
         setCatalinaHome();
         setCatalinaBase();
 
+//        初始化 classLoader
         initClassLoaders();
 
         Thread.currentThread().setContextClassLoader(catalinaLoader);
@@ -205,14 +206,19 @@ public final class Bootstrap {
         // Load our startup class and call its process() method
         if (log.isDebugEnabled())
             log.debug("Loading startup class");
+
+        //加载 org.apache.catalina.startup.Catalina class
         Class<?> startupClass =
             catalinaLoader.loadClass
             ("org.apache.catalina.startup.Catalina");
+
+        // 实例化 Catalina 实例
         Object startupInstance = startupClass.newInstance();
 
         // Set the shared extensions class loader
         if (log.isDebugEnabled())
             log.debug("Setting startup class properties");
+
         String methodName = "setParentClassLoader";
         Class<?> paramTypes[] = new Class[1];
         paramTypes[0] = Class.forName("java.lang.ClassLoader");
@@ -222,6 +228,7 @@ public final class Bootstrap {
             startupInstance.getClass().getMethod(methodName, paramTypes);
         method.invoke(startupInstance, paramValues);
 
+//        Catalina 实例赋给了 catalinaDaemon 对象
         catalinaDaemon = startupInstance;
 
     }
@@ -246,6 +253,8 @@ public final class Bootstrap {
             param = new Object[1];
             param[0] = arguments;
         }
+
+        //catalinaDaemon  对象为 Catalina  实例  执行的为 catalina 的 stop 方法
         Method method =
             catalinaDaemon.getClass().getMethod(methodName, paramTypes);
         if (log.isDebugEnabled())
@@ -277,7 +286,10 @@ public final class Bootstrap {
     public void init(String[] arguments)
         throws Exception {
 
+        // 初始化
         init();
+
+        //加载参数
         load(arguments);
 
     }
@@ -290,7 +302,10 @@ public final class Bootstrap {
         throws Exception {
         if( catalinaDaemon==null ) init();
 
+        //catalinaDaemon  对象为 Catalina  实例
         Method method = catalinaDaemon.getClass().getMethod("start", (Class [] )null);
+
+        //执行的为 catalina 的 start方法
         method.invoke(catalinaDaemon, (Object [])null);
 
     }
@@ -302,6 +317,7 @@ public final class Bootstrap {
     public void stop()
         throws Exception {
 
+        //catalinaDaemon  对象为 Catalina  实例  执行的为 catalina 的 stop 方法
         Method method = catalinaDaemon.getClass().getMethod("stop", (Class [] ) null);
         method.invoke(catalinaDaemon, (Object [] ) null);
 
@@ -314,8 +330,10 @@ public final class Bootstrap {
     public void stopServer()
         throws Exception {
 
+        //catalinaDaemon  对象为 Catalina  实例  执行的为 catalina 的 stop 方法
         Method method =
             catalinaDaemon.getClass().getMethod("stopServer", (Class []) null);
+
         method.invoke(catalinaDaemon, (Object []) null);
 
     }
@@ -338,6 +356,8 @@ public final class Bootstrap {
             param = new Object[1];
             param[0] = arguments;
         }
+
+        //catalinaDaemon  对象为 Catalina  实例  执行的为 catalina 的 stop 方法
         Method method =
             catalinaDaemon.getClass().getMethod("stopServer", paramTypes);
         method.invoke(catalinaDaemon, param);
@@ -355,6 +375,8 @@ public final class Bootstrap {
         paramTypes[0] = Boolean.TYPE;
         Object paramValues[] = new Object[1];
         paramValues[0] = Boolean.valueOf(await);
+
+        //catalinaDaemon  对象为 Catalina  实例  执行的为 catalina 的 stop 方法
         Method method =
             catalinaDaemon.getClass().getMethod("setAwait", paramTypes);
         method.invoke(catalinaDaemon, paramValues);
@@ -366,6 +388,8 @@ public final class Bootstrap {
     {
         Class<?> paramTypes[] = new Class[0];
         Object paramValues[] = new Object[0];
+
+        //catalinaDaemon  对象为 Catalina  实例  执行的为 catalina 的 stop 方法
         Method method =
             catalinaDaemon.getClass().getMethod("getAwait", paramTypes);
         Boolean b=(Boolean)method.invoke(catalinaDaemon, paramValues);
@@ -391,10 +415,13 @@ public final class Bootstrap {
      */
     public static void main(String args[]) {
 
+        // 创建一个 Bootstrap 实例
         if (daemon == null) {
             // Don't set daemon until init() has completed
             Bootstrap bootstrap = new Bootstrap();
             try {
+
+                // 初始化ClassLoader、并用ClassLoader创建了 Catalina 实例，赋给了 catalinaDaemon 变量
                 bootstrap.init();
             } catch (Throwable t) {
                 handleThrowable(t);

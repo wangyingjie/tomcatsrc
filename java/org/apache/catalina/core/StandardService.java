@@ -39,6 +39,8 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.res.StringManager;
 
+import static sun.misc.VM.getState;
+
 
 /**
  * Standard implementation of the <code>Service</code> interface.  The
@@ -441,12 +443,16 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         // Start our defined Container first
         if (container != null) {
             synchronized (container) {
+
+                //启动 容器
                 container.start();
             }
         }
 
         synchronized (executors) {
             for (Executor executor: executors) {
+
+                // 启动线程池
                 executor.start();
             }
         }
@@ -457,6 +463,8 @@ public class StandardService extends LifecycleMBeanBase implements Service {
                 try {
                     // If it has already failed, don't try and start it
                     if (connector.getState() != LifecycleState.FAILED) {
+
+                        // 启动 Connector 链接
                         connector.start();
                     }
                 } catch (Exception e) {
@@ -569,7 +577,8 @@ public class StandardService extends LifecycleMBeanBase implements Service {
             }
         }
     }
-    
+
+
     @Override
     protected void destroyInternal() throws LifecycleException {
         // Destroy our defined Connectors

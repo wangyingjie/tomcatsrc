@@ -51,6 +51,9 @@ import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.StringCache;
 import org.apache.tomcat.util.res.StringManager;
 
+import static sun.misc.VM.getState;
+import static sun.net.www.protocol.http.AuthCacheValue.Type.Server;
+
 
 /**
  * Standard implementation of the <b>Server</b> interface, available for use
@@ -377,6 +380,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
             if (getState().isAvailable()) {
                 try {
+
+                    // 调用 service 启动 service
                     service.start();
                 } catch (LifecycleException e) {
                     // Ignore
@@ -439,6 +444,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
             return;
         }
 
+        // port > 0 则创建一个监听关闭命令的 ServerSocket
         // Set up a server socket to wait on
         try {
             awaitSocket = new ServerSocket(port, 1,
@@ -522,8 +528,11 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
                     }
                 }
 
+                // 检查在指定端口接收到的命令是否和  shutdown 命令相匹配
                 // Match against our command string
                 boolean match = command.toString().equals(shutdown);
+
+                // 匹配则跳出循环
                 if (match) {
                     log.info(sm.getString("standardServer.shutdownViaPort"));
                     break;
@@ -754,6 +763,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         
         // Start our defined Services
         synchronized (servicesLock) {
+
+            //循环调用所有 service 的start 方法
             for (int i = 0; i < services.length; i++) {
                 services[i].start();
             }
@@ -776,6 +787,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         
         // Stop our defined Services
         for (int i = 0; i < services.length; i++) {
+
+            //循环调用所有 service stop 方法
             services[i].stop();
         }
 

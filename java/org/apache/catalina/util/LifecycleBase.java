@@ -31,6 +31,8 @@ import org.apache.tomcat.util.res.StringManager;
  * Base implementation of the {@link Lifecycle} interface that implements the
  * state transition rules for {@link Lifecycle#start()} and
  * {@link Lifecycle#stop()}
+ *
+ * 所有实现了生命周期的组件 都直接 or  间接的继承了 LifecycleBase 这个模板类
  */
 public abstract class LifecycleBase implements Lifecycle {
 
@@ -43,6 +45,8 @@ public abstract class LifecycleBase implements Lifecycle {
     /**
      * Used to handle firing lifecycle events.
      * TODO: Consider merging LifecycleSupport into this class.
+     *
+     * LifecycleSupport  专门用来管理所有的监听器
      */
     private LifecycleSupport lifecycle = new LifecycleSupport(this);
 
@@ -52,7 +56,7 @@ public abstract class LifecycleBase implements Lifecycle {
      */
     private volatile LifecycleState state = LifecycleState.NEW;
 
-
+    // 4 个管理监听器的方法 都是在 LifecycleSupport 里面来完成功能的
     /**
      * {@inheritDoc}
      */
@@ -93,13 +97,19 @@ public abstract class LifecycleBase implements Lifecycle {
 
     @Override
     public final synchronized void init() throws LifecycleException {
+
+        //当前状态与要处理的方法是否匹配
         if (!state.equals(LifecycleState.NEW)) {
+            // 抛异常处理
             invalidTransition(Lifecycle.BEFORE_INIT_EVENT);
         }
 
         try {
             setStateInternal(LifecycleState.INITIALIZING, null, false);
+            //  模板方法
             initInternal();
+
+            //初始化结束设置 state
             setStateInternal(LifecycleState.INITIALIZED, null, false);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -118,6 +128,8 @@ public abstract class LifecycleBase implements Lifecycle {
     @Override
     public final synchronized void start() throws LifecycleException {
 
+        //当前状态与要处理的方法是否匹配
+        // 已经启动则答应日志并直接返回
         if (LifecycleState.STARTING_PREP.equals(state) || LifecycleState.STARTING.equals(state) ||
                 LifecycleState.STARTED.equals(state)) {
 
@@ -132,16 +144,24 @@ public abstract class LifecycleBase implements Lifecycle {
         }
 
         if (state.equals(LifecycleState.NEW)) {
+            // 新建则初始化
             init();
-        } else if (state.equals(LifecycleState.FAILED)) {
-            stop();
-        } else if (!state.equals(LifecycleState.INITIALIZED) &&
-                !state.equals(LifecycleState.STOPPED)) {
-            invalidTransition(Lifecycle.BEFORE_START_EVENT);
+        } else {
+            // 启动失败则关闭
+            if (state.equals(LifecycleState.FAILED)) {
+                stop();
+            } else if (!state.equals(LifecycleState.INITIALIZED) &&
+                    !state.equals(LifecycleState.STOPPED)) {
+                // 状态无法处理抛异常
+                invalidTransition(Lifecycle.BEFORE_START_EVENT);
+            }
         }
 
         try {
+
             setStateInternal(LifecycleState.STARTING_PREP, null, false);
+
+            // 模板方法
             startInternal();
             if (state.equals(LifecycleState.FAILED)) {
                 // This is a 'controlled' failure. The component put itself into the
@@ -218,6 +238,7 @@ public abstract class LifecycleBase implements Lifecycle {
                 setStateInternal(LifecycleState.STOPPING_PREP, null, false);
             }
 
+            // 模板方法
             stopInternal();
 
             // Shouldn't be necessary but acts as a check that sub-classes are
@@ -302,6 +323,7 @@ public abstract class LifecycleBase implements Lifecycle {
 
     protected abstract void destroyInternal() throws LifecycleException;
 
+    // -----------------------------------------------获取当前的状态
     /**
      * {@inheritDoc}
      */
@@ -355,6 +377,7 @@ public abstract class LifecycleBase implements Lifecycle {
             log.debug(sm.getString("lifecycleBase.setState", this, state));
         }
 
+        // 检查状态是否合乎逻辑
         if (check) {
             // Must have been triggered by one of the abstract methods (assume
             // code in this class is correct)
@@ -382,7 +405,10 @@ public abstract class LifecycleBase implements Lifecycle {
             }
         }
 
+        // 设置状态
         this.state = state;
+
+        // 发布一个事件
         String lifecycleEvent = state.getLifecycleEvent();
         if (lifecycleEvent != null) {
             fireLifecycleEvent(lifecycleEvent, data);

@@ -113,6 +113,8 @@ public final class LifecycleSupport {
 
         LifecycleEvent event = new LifecycleEvent(lifecycle, type, data);
         LifecycleListener interested[] = listeners;
+
+        // 循环所有的 LifecycleListener
         for (int i = 0; i < interested.length; i++)
             interested[i].lifecycleEvent(event);
 

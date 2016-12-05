@@ -67,6 +67,10 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
+ *
+ * Catalina [,kætə'li:nə]  n. 远程轰炸机
+ *
+ * 该类是整个Tomcat的管理类，提供了 load、start、stop 分别来管理整个服务器的生命周期
  */
 public class Catalina {
 
@@ -536,6 +540,8 @@ public class Catalina {
 
     /**
      * Start a new server instance.
+     *
+     * 加载 conf/server.xml
      */
     public void load() {
 
@@ -547,6 +553,7 @@ public class Catalina {
 
         initNaming();
 
+        // 使用 Digester 创建了 Server
         // Create and execute our Digester
         Digester digester = createStartDigester();
 
@@ -639,6 +646,8 @@ public class Catalina {
 
         // Start the new server
         try {
+
+            // 调用了 server  init 方法
             getServer().init();
         } catch (LifecycleException e) {
             if (Boolean.getBoolean("org.apache.catalina.startup.EXIT_ON_INIT_FAILURE")) {
@@ -659,6 +668,8 @@ public class Catalina {
 
     /*
      * Load using arguments
+     *
+     * 用于
      */
     public void load(String args[]) {
 
@@ -690,10 +701,14 @@ public class Catalina {
 
         // Start the new server
         try {
+
+            //调用 server 的start 方法启动服务器
             getServer().start();
         } catch (LifecycleException e) {
             log.fatal(sm.getString("catalina.serverStartFail"), e);
             try {
+
+                // 销毁服务器
                 getServer().destroy();
             } catch (LifecycleException e1) {
                 log.debug("destroy() failed for failed Server ", e1);
@@ -723,6 +738,7 @@ public class Catalina {
             }
         }
 
+        // 判断服务器是否进入等待状态
         if (await) {
             await();
             stop();

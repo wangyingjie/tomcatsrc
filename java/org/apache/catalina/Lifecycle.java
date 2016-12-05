@@ -83,7 +83,7 @@ package org.apache.catalina;
 public interface Lifecycle {
 
 
-    // ----------------------------------------------------- Manifest Constants
+    // ----------------------------------------------------- Manifest Constants  监听事件类型
 
 
     /**
@@ -170,7 +170,7 @@ public interface Lifecycle {
     public static final String CONFIGURE_STOP_EVENT = "configure_stop";
 
 
-    // --------------------------------------------------------- Public Methods
+    // --------------------------------------------------------- Public Methods  3 个管理监听事件的方法
 
 
     /**
@@ -196,6 +196,8 @@ public interface Lifecycle {
     public void removeLifecycleListener(LifecycleListener listener);
 
 
+
+    // ---------------------------------------------------------4 个管理生命周期的方法
     /**
      * Prepare the component for starting. This method should perform any
      * initialization required post object creation. The following
@@ -286,6 +288,7 @@ public interface Lifecycle {
     public void destroy() throws LifecycleException;
 
 
+    // --------------------------------------------------------- 2个用于获取当前状态的方法
     /**
      * Obtain the current state of the source component.
      *
