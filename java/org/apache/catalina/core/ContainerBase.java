@@ -17,47 +17,7 @@
 package org.apache.catalina.core;
 
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.io.IOException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javax.management.ObjectName;
-import javax.naming.directory.DirContext;
-import javax.servlet.ServletException;
-
-import org.apache.catalina.AccessLog;
-import org.apache.catalina.Cluster;
-import org.apache.catalina.Container;
-import org.apache.catalina.ContainerEvent;
-import org.apache.catalina.ContainerListener;
-import org.apache.catalina.Globals;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.Loader;
-import org.apache.catalina.Manager;
-import org.apache.catalina.Pipeline;
-import org.apache.catalina.Realm;
-import org.apache.catalina.Valve;
+import org.apache.catalina.*;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.mbeans.MBeanUtils;
@@ -67,6 +27,21 @@ import org.apache.juli.logging.LogFactory;
 import org.apache.naming.resources.ProxyDirContext;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
+
+import javax.management.ObjectName;
+import javax.naming.directory.DirContext;
+import javax.servlet.ServletException;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.io.IOException;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 /**
@@ -1115,10 +1090,15 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         Container children[] = findChildren();
         List<Future<Void>> results = new ArrayList<Future<Void>>();
         for (int i = 0; i < children.length; i++) {
-            results.add(startStopExecutor.submit(new StartChild(children[i])));
+
+            // todo 为了调试方便此处修改为单线程执行
+            //results.add(startStopExecutor.submit(new StartChild(children[i])));
+
+            children[i].start();
         }
 
-        boolean fail = false;
+        // todo 为了调试方便上面修改为单线程执行，以下获取线程返回结果的类暂时注释掉
+        /*boolean fail = false;
         for (Future<Void> result : results) {
             try {
                 result.get();
@@ -1131,7 +1111,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         if (fail) {
             throw new LifecycleException(
                     sm.getString("containerBase.threadedStartFailed"));
-        }
+        }*/
 
         // 启动管道
         // Start the Valves in our pipeline (including the basic), if any
