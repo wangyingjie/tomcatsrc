@@ -1096,10 +1096,15 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             ((Lifecycle) loader).start();
         logger = null;
         getLogger();
+
         if ((manager != null) && (manager instanceof Lifecycle))
             ((Lifecycle) manager).start();
+
+        // 判断集群，启动集群
         if ((cluster != null) && (cluster instanceof Lifecycle))
             ((Lifecycle) cluster).start();
+
+        // 判断Realm，启动Realm
         Realm realm = getRealmInternal();
         if ((realm != null) && (realm instanceof Lifecycle))
             ((Lifecycle) realm).start();
@@ -1128,13 +1133,16 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                     sm.getString("containerBase.threadedStartFailed"));
         }
 
+        // 启动管道
         // Start the Valves in our pipeline (including the basic), if any
         if (pipeline instanceof Lifecycle)
             ((Lifecycle) pipeline).start();
 
 
+        // 设置生命周期
         setState(LifecycleState.STARTING);
 
+        // 启动后台线程
         // Start our thread
         threadStart();
 
