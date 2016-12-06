@@ -8,7 +8,8 @@ http://www.jianshu.com/p/9e3f99f2d5bb
 
 
 ## 3、配置Tomcat 启动类
-点击菜单栏 Run-Edit configurations...，点击加号新建配置项Application Configuration，名称随意填写，如tomcat_7_0_run，Main Class选择org.apache.catalina.startup.Bootstrap，VM options中填入：
+点击菜单栏 Run-Edit configurations...，点击加号新建配置项Application Configuration，名称随意填写，
+如tomcat_7_0_run，Main Class选择org.apache.catalina.startup.Bootstrap，VM options中填入：
 -Dcatalina.home="D:\Tomcat7-Src\tomcatsrc\lunch"
 
 
