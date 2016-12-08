@@ -692,14 +692,17 @@ public abstract class AbstractEndpoint<S> {
         int count = getAcceptorThreadCount();
         acceptors = new Acceptor[count];
 
+        //启动acceptorThreadCount个线程，每个线程由Acceptor代理
         for (int i = 0; i < count; i++) {
             acceptors[i] = createAcceptor();
             String threadName = getName() + "-Acceptor-" + i;
             acceptors[i].setThreadName(threadName);
-            Thread t = new Thread(acceptors[i], threadName);
+            /*Thread t = new Thread(acceptors[i], threadName);
             t.setPriority(getAcceptorThreadPriority());
             t.setDaemon(getDaemon());
-            t.start();
+            t.start();*/
+
+            acceptors[i].run();
         }
     }
 

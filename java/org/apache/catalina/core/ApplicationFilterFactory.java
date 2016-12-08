@@ -88,6 +88,8 @@ public final class ApplicationFilterFactory {
      *
      * @param request The servlet request we are processing
      * @param servlet The servlet instance to be wrapped
+     *
+     *  创建过滤链
      */
     public ApplicationFilterChain createFilterChain
         (ServletRequest request, Wrapper wrapper, Servlet servlet) {

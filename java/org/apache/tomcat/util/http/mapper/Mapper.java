@@ -879,6 +879,8 @@ public final class Mapper {
 
     /**
      * Wrapper mapping.
+     *
+     * 用来匹配对应的Servlet
      */
     private final void internalMapWrapper(ContextVersion contextVersion,
                                           CharChunk path,

@@ -170,6 +170,8 @@ final class ApplicationFilterChain implements FilterChain, CometFilterChain {
      *
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
+     *
+     * 用来执行过滤器方法以及最后的Servlet
      */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response)

@@ -879,7 +879,11 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                 wrapper.setKeepAliveLeft(getMaxKeepAliveRequests());
                 wrapper.setSecure(isSSLEnabled());
                 connections.put(Long.valueOf(socket), wrapper);
-                getExecutor().execute(new SocketWithOptionsProcessor(wrapper));
+
+                // todo 为了方便测试，修改为单线程
+                //getExecutor().execute(new SocketWithOptionsProcessor(wrapper));
+
+                new SocketWithOptionsProcessor(wrapper).run();
             }
         } catch (RejectedExecutionException x) {
             log.warn("Socket processing request was rejected for:"+socket,x);

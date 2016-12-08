@@ -701,6 +701,7 @@ public class CoyoteAdapter implements Adapter {
         // Parse the path parameters. This will:
         //   - strip out the path parameters
         //   - convert the decodedURI to bytes
+        // 这个方法中，会解析请求，调用Mapper的Map方法来确定该请求该由哪个Engine、Host和Context来处理。
         parsePathParameters(req, request);
 
         // URI decoding

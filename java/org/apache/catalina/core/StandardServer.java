@@ -417,6 +417,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         if( port==-1 ) {
             try {
                 awaitThread = Thread.currentThread();
+
+                //循环监听
                 while(!stopAwait) {
                     try {
                         Thread.sleep( 10000 );

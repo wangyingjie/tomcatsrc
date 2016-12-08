@@ -432,6 +432,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
 
             initializeConnectionLatch();
 
+
             startAcceptorThreads();
 
             // Start async timeout thread
