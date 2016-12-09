@@ -694,6 +694,8 @@ public abstract class AbstractEndpoint<S> {
 
         //启动acceptorThreadCount个线程，每个线程由Acceptor代理
         for (int i = 0; i < count; i++) {
+
+            // 调用子类的createAcceptor方法，本例中即NioEndpoint类的createAcceptor方法
             acceptors[i] = createAcceptor();
             String threadName = getName() + "-Acceptor-" + i;
             acceptors[i].setThreadName(threadName);

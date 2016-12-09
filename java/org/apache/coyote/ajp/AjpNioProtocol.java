@@ -174,6 +174,8 @@ public class AjpNioProtocol extends AbstractAjpProtocol<NioChannel> {
         @Override
         protected AjpNioProcessor createProcessor() {
             AjpNioProcessor processor = new AjpNioProcessor(proto.packetSize, (NioEndpoint)proto.endpoint);
+
+            // 设置 adapter 对象
             processor.setAdapter(proto.adapter);
             processor.setAjpFlush(proto.getAjpFlush());
             processor.setTomcatAuthentication(proto.tomcatAuthentication);

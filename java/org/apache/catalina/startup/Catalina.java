@@ -299,6 +299,8 @@ public class Catalina {
 
     /**
      * Create and configure the Digester we will be using for startup.
+     *
+     * 通过  Digester 来解析Tomcat的  server.xml 配置文件
      */
     protected Digester createStartDigester() {
         long t1=System.currentTimeMillis();
@@ -619,8 +621,14 @@ public class Catalina {
 
             try {
                 inputSource.setByteStream(inputStream);
+
+                //一是创建一个Digester对象，将当前对象压入Digester里的对象栈顶，
+                // 根据inputSource里设置的文件xml路径及所创建的Digester对象所包含的解析规则生成相应对象，
+
                 digester.push(this);
+
                 digester.parse(inputSource);
+
             } catch (SAXParseException spe) {
                 log.warn("Catalina.start using " + getConfigFile() + ": " +
                         spe.getMessage());
@@ -639,6 +647,7 @@ public class Catalina {
             }
         }
 
+        // 并调用相应方法将对象之间关联起来。二是调用Server接口对象的init方法。
         getServer().setCatalina(this);
 
         // Stream redirection

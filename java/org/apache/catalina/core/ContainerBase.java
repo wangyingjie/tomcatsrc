@@ -847,10 +847,13 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                 new PrivilegedAddChild(child);
             AccessController.doPrivileged(dp);
         } else {
+
+            // 添加容器节点
             addChildInternal(child);
         }
     }
 
+    // 添加子容器
     private void addChildInternal(Container child) {
 
         if( log.isDebugEnabled() )
@@ -871,6 +874,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             if ((getState().isAvailable() ||
                     LifecycleState.STARTING_PREP.equals(getState())) &&
                     startChildren) {
+
+                // 就是指调用StandardContext的start方法。
                 child.start();
             }
         } catch (LifecycleException e) {
@@ -1312,6 +1317,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase
      * Execute a periodic task, such as reloading, etc. This method will be
      * invoked inside the classloading context of this container. Unexpected
      * throwables will be caught and logged.
+     *
+     * 可参考:http://tyrion.iteye.com/blog/1947838
+     *
+     * 所以在Tomcat启动完成之后理论上应该有6个StandardContext对象，6个WebappLoader对象，6个WebappClassLoader对象
      */
     @Override
     public void backgroundProcess() {
@@ -1439,6 +1448,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     /**
      * Start the background thread that will periodically check for
      * session timeouts.
+     *
+     * 启动了一个容器
      */
     protected void threadStart() {
 

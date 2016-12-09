@@ -50,6 +50,8 @@ public class StandardHost extends ContainerBase implements Host {
     public StandardHost() {
 
         super();
+
+        // Host 初始化的时候都会设置自己的基础  阀
         pipeline.setBasic(new StandardHostValve());
 
     }
@@ -628,6 +630,8 @@ public class StandardHost extends ContainerBase implements Host {
      * of Context.
      *
      * @param child Child container to be added
+     *
+     * 添加子节点
      */
     @Override
     public void addChild(Container child) {

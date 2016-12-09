@@ -112,6 +112,8 @@ final class StandardEngineValve
         }
 
         // 责任链模式：将请求传递给 Host 管道
+        // 从请求对象中取出该请求关联的Host（默认情况下是org.apache.catalina.core.StandardHost对象）,
+        // StandardHost 初始化的时候会设置基础阀 StandardHostValue
         // Ask this Host to process this request
         host.getPipeline().getFirst().invoke(request, response);
 

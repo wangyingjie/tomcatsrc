@@ -62,6 +62,8 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
     public AbstractProcessor(AbstractEndpoint<S> endpoint) {
         this.endpoint = endpoint;
         asyncStateMachine = new AsyncStateMachine<S>(this);
+
+        // 创建出 request、response 对象
         request = new Request();
         response = new Response();
         response.setHook(this);

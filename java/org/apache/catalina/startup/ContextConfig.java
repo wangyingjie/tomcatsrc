@@ -344,19 +344,28 @@ public class ContextConfig implements LifecycleListener {
 
             // 解析 Web.xml 配置文件
             configureStart();
+
         } else if (event.getType().equals(Lifecycle.BEFORE_START_EVENT)) {
+
             beforeStart();
+
         } else if (event.getType().equals(Lifecycle.AFTER_START_EVENT)) {
             // Restore docBase for management tools
             if (originalDocBase != null) {
                 context.setDocBase(originalDocBase);
             }
         } else if (event.getType().equals(Lifecycle.CONFIGURE_STOP_EVENT)) {
+
             configureStop();
+
         } else if (event.getType().equals(Lifecycle.AFTER_INIT_EVENT)) {
+
             init();
+
         } else if (event.getType().equals(Lifecycle.AFTER_DESTROY_EVENT)) {
+
             destroy();
+
         }
 
     }
@@ -843,6 +852,7 @@ public class ContextConfig implements LifecycleListener {
                     Boolean.valueOf(context.getXmlNamespaceAware())));
         }
 
+        // 解析 web.xml 配置文件
         webConfig();
 
         if (!context.getIgnoreAnnotations()) {
@@ -1183,6 +1193,9 @@ public class ContextConfig implements LifecycleListener {
      * where there is duplicate configuration, the most specific level wins. ie
      * an application's web.xml takes precedence over the host level or global
      * web.xml file.   解析 web.xml 配置文件
+     *
+     * 概括起来包括合并Tomcat全局web.xml、当前应用中的web.xml、web-fragment.xml和web应用的注解中的配置信息，
+     * 并将解析出的各种配置信息（如servlet配置、filter配置等）关联到Context对象中
      */
     protected void webConfig() {
         /*
@@ -1312,13 +1325,17 @@ public class ContextConfig implements LifecycleListener {
                 convertJsps(webXml);
             }
 
+            // 将配置信息 set 到Context 属性里面
             // Step 9. Apply merged web.xml to Context
             if (ok) {
                 webXml.configureContext(context);
             }
         } else {
+
             webXml.merge(defaults);
             convertJsps(webXml);
+
+            // 将配置信息 set 到Context 属性里面
             webXml.configureContext(context);
         }
 

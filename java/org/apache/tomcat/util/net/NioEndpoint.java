@@ -336,10 +336,12 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
      */
     protected Poller[] pollers = null;
     protected AtomicInteger pollerRotater = new AtomicInteger(0);
+
     /**
      * Return an available poller in true round robin fashion
      */
     public Poller getPoller0() {
+        // 最简单的轮询调度算法，poller的计数器不断加1再对poller数组取余数
         int idx = Math.abs(pollerRotater.incrementAndGet()) % pollers.length;
         return pollers[idx];
     }
@@ -533,13 +535,13 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             // Create worker collection
             if ( getExecutor() == null ) {
 
-                // 创建工作线程池 Executor
+                // 构造线程池，用于后续执行SocketProcessor线程
                 createExecutor();
             }
 
             initializeConnectionLatch();
 
-            // 启动 poller 线程
+            // 根据处理器数量构造一定数目的轮询器
             // Start poller threads
             pollers = new Poller[getPollerThreadCount()];
             for (int i=0; i<pollers.length; i++) {
@@ -550,7 +552,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 pollerThread.start();
             }
 
-            // 启动线程
+            // 创建接收者线程，即 Acceptor
             startAcceptorThreads();
         }
     }
@@ -652,12 +654,23 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
     protected boolean setSocketOptions(SocketChannel socket) {
         // Process the connection
         try {
+
+            // 将SocketChannel配置为非阻塞模式
             //disable blocking, APR style, we are gonna be polling it
             socket.configureBlocking(false);
             Socket sock = socket.socket();
+
+            // 设置Socket参数值（从server.xml的Connector节点上获取参数值）
+            // 比如Socket发送、接收的缓存大小、心跳检测等
             socketProperties.setProperties(sock);
 
+
+            // 从NioChannel的缓存队列中取出一个NioChannel
+            // NioChannel是SocketChannel的一个的包装类
+            // 这里对上层屏蔽SSL和一般TCP连接的差异
             NioChannel channel = nioChannels.poll();
+
+            // 缓存队列中没有则新建一个NioChannel
             if ( channel == null ) {
                 // SSL setup
                 if (sslContext != null) {
@@ -676,6 +689,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     channel = new NioChannel(socket, bufhandler);
                 }
             } else {
+
+                // 将SocketChannel关联到从缓存队列中获取的NioChannel上来
                 channel.setIOChannel(socket);
                 if ( channel instanceof SecureNioChannel ) {
                     SSLEngine engine = createSSLEngine();
@@ -684,6 +699,9 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     channel.reset();
                 }
             }
+
+            // poller n. 轮询者；轮询器
+            // 将新接收到的SocketChannel注册到Poller中
             getPoller0().register(channel);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -749,11 +767,22 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 return false;
             }
             attachment.setCometNotify(false); //will get reset upon next reg
+
+            // 从SocketProcessor的缓存队列中取出一个来处理socket
             SocketProcessor sc = processorCache.poll();
-            if ( sc == null ) sc = new SocketProcessor(socket,status);
-            else sc.reset(socket,status);
-            if ( dispatch && getExecutor()!=null ) getExecutor().execute(sc);
-            else sc.run();
+            if (sc == null) {
+                sc = new SocketProcessor(socket, status);
+            } else{
+                sc.reset(socket, status);
+            }
+
+            // 将有事件发生的socket交给Worker处理
+            if (dispatch && getExecutor() != null){
+                getExecutor().execute(sc);
+            } else{
+                sc.run();
+            }
+
         } catch (RejectedExecutionException rx) {
             log.warn("Socket processing request was rejected for:"+socket,rx);
             return false;
@@ -784,6 +813,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
     /**
      * The background thread that listens for incoming TCP/IP connections and
      * hands them off to an appropriate processor.
+     *
+     * 后台线程，用于监听TCP/IP连接以及将它们分发给相应的调度器处理。
      */
     protected class Acceptor extends AbstractEndpoint.Acceptor {
 
@@ -811,11 +842,15 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 state = AcceptorState.RUNNING;
 
                 try {
+
+                    // 如果已经达到最大连接数则让线程等待
                     //if we have reached max connections, wait
                     countUpOrAwaitConnection();
 
                     SocketChannel socket = null;
                     try {
+
+                        // 接收连接，这里用的阻塞模式。
                         // Accept the next incoming connection from the server
                         // socket
                         socket = serverSock.accept();
@@ -830,6 +865,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     // Successful accept, reset the error delay
                     errorDelay = 0;
 
+                    // 注意这个setSocketOptions方法
+                    // 它将把上面接收到的socket添加到轮询器Poller中
                     // setSocketOptions() will add channel to the poller
                     // if successful
                     if (running && !paused) {
@@ -895,11 +932,13 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
     // ----------------------------------------------------- Poller Inner Classes
 
     /**
-     *
      * PollerEvent, cacheable object for poller events to avoid GC
+     *
+     * 可参考：http://tyrion.iteye.com/blog/2256898
      */
     public static class PollerEvent implements Runnable {
 
+        //每个PollerEvent都会保存NioChannel的引用
         protected NioChannel socket;
         protected int interestOps;
         protected KeyAttachment key;
@@ -919,6 +958,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
 
         @Override
         public void run() {
+
+            //socket第一次注册到selector中，完成对socket读事件的注册
             if ( interestOps == OP_REGISTER ) {
                 try {
                     socket.getIOChannel().register(socket.getPoller().getSelector(), SelectionKey.OP_READ, key);
@@ -926,6 +967,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     log.error("", x);
                 }
             } else {
+
+                // socket之前已经注册到了selector中，更新socket所感兴趣的事件
                 final SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
                 try {
                     if (key == null) {
@@ -969,7 +1012,9 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
     }
 
     /**
-     * Poller class.
+     * Poller class.  轮询器
+     *
+     * http://tyrion.iteye.com/blog/2256896
      */
     public class Poller implements Runnable {
 
@@ -1671,6 +1716,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
 
     // ---------------------------------------------- SocketProcessor Inner Class
     /**
+     * // 这个类相当于一个工作者，但只会在一个外部线程池中简单使用。
      * This class is the equivalent of the Worker, but will simply use in an
      * external Executor thread pool.
      */
@@ -1747,6 +1793,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     SocketState state = SocketState.OPEN;
                     // Process the request from this socket
                     if (status == null) {
+
+                        // 最关键的代码，这里将KeyAttachment(实际就是socket)交给Handler处理请求
                         state = handler.process(ka, SocketStatus.OPEN_READ);
                     } else {
                         state = handler.process(ka, status);

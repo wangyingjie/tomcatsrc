@@ -156,6 +156,8 @@ public class StandardContext extends ContainerBase
     public StandardContext() {
 
         super();
+
+        // 设置自己基础的阀
         pipeline.setBasic(new StandardContextValve());
         broadcaster = new NotificationBroadcasterSupport();
         // Set defaults
@@ -4135,6 +4137,8 @@ public class StandardContext extends ContainerBase
         }
 
         try {
+
+         // 重新启动
             start();
         } catch (LifecycleException e) {
             log.error(
@@ -4940,6 +4944,8 @@ public class StandardContext extends ContainerBase
      * Configure and initialize the set of filters for this Context.
      * Return <code>true</code> if all filter initialization completed
      * successfully, or <code>false</code> otherwise.
+     *
+     * 这段代码看起来很简单，取出web.xml解析时读到的filter配置信息
      */
     public boolean filterStart() {
 
@@ -4955,8 +4961,9 @@ public class StandardContext extends ContainerBase
                     getLogger().debug(" Starting filter '" + name + "'");
                 ApplicationFilterConfig filterConfig = null;
                 try {
-                    filterConfig =
-                        new ApplicationFilterConfig(this, entry.getValue());
+
+                 // 创建一个 filter 对象
+                    filterConfig = new ApplicationFilterConfig(this, entry.getValue());
                     filterConfigs.put(name, filterConfig);
                 } catch (Throwable t) {
                     t = ExceptionUtils.unwrapInvocationTargetException(t);
@@ -5031,8 +5038,10 @@ public class StandardContext extends ContainerBase
                     listeners[i] + "'");
             try {
                 ApplicationListener listener = listeners[i];
-                results[i] = getInstanceManager().newInstance(
-                        listener.getClassName());
+
+                // 创建 listener 对象实例
+                results[i] = getInstanceManager().newInstance(listener.getClassName());
+
                 if (listener.isPluggabilityBlocked()) {
                     noPluggabilityListeners.add(results[i]);
                 }
@@ -5369,7 +5378,7 @@ public class StandardContext extends ContainerBase
             for (Wrapper wrapper : list) {
                 try {
 
-                    // 调用servlet的初始化
+                    // todo 调用servlet的初始化
                     wrapper.load();
                 } catch (ServletException e) {
                     getLogger().error(sm.getString("standardContext.loadOnStartup.loadException",
@@ -5639,7 +5648,7 @@ public class StandardContext extends ContainerBase
             // Configure and call application event listeners
             if (ok) {
 
-                // 启动所有的 web.xml 中配置的 listener
+                // todo 启动所有的 web.xml 中配置的 listener
                 if (!listenerStart()) {
                     log.error(sm.getString("standardContext.listenerFail"));
                     ok = false;
@@ -5659,7 +5668,7 @@ public class StandardContext extends ContainerBase
             // Configure and call application filters
             if (ok) {
 
-               // 启动所有的 web.xml 中配置的 filter
+               // todo 启动所有的 web.xml 中配置的 filter
                 if (!filterStart()) {
                     log.error(sm.getString("standardContext.filterFail"));
                     ok = false;
@@ -5669,7 +5678,7 @@ public class StandardContext extends ContainerBase
             // Load and initialize all "load on startup" servlets
             if (ok) {
 
-               // 加载自启动的 servlet ，同时会执行  init 方法
+               // todo 加载自启动的 servlet ，同时会执行  init 方法
                 if (!loadOnStartup(findChildren())){
                     log.error(sm.getString("standardContext.servletFail"));
                     ok = false;

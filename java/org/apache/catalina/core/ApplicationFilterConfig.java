@@ -102,6 +102,8 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
         this.filterDef = filterDef;
         // Allocate a new filter instance if necessary
         if (filterDef.getFilter() == null) {
+
+            // 获取 filter
             getFilter();
         } else {
             this.filter = filterDef.getFilter();
@@ -244,6 +246,8 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
      * @exception ServletException if thrown by the filter's init() method
      * @throws NamingException
      * @throws InvocationTargetException
+     *
+     * 与Listener的对象构造类似，都是通过调用getInstanceManager().newInstance方法。当然，按照Servlet规范
      */
     Filter getFilter() throws ClassCastException, ClassNotFoundException,
         IllegalAccessException, InstantiationException, ServletException,

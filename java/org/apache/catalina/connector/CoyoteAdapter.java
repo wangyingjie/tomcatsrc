@@ -445,13 +445,20 @@ public class CoyoteAdapter implements Adapter {
             // Parse and set Catalina and configuration specific
             // request parameters
             req.getRequestProcessor().setWorkerThreadName(Thread.currentThread().getName());
+
+            //通过postParseRequest方法的调用请求对象内保存了关于本次请求的具体要执行的Host、Context、Wrapper组件的引用。
             postParseSuccess = postParseRequest(req, request, res, response);
             if (postParseSuccess) {
                 //check valves if we support async
                 request.setAsyncSupported(connector.getService().getContainer().getPipeline().isAsyncSupported());
 
-                // 最终执行都调用到 BaseValue 相关的处理类
                 // todo 最终执行了 Service-->Container-->Pipeline-->invoke
+                // todo 虽然只有一行，但调用了一堆方法，这里对这些方法逐个分析一下：http://tyrion.iteye.com/blog/1934769
+                // connector.getService()获取的是当前connector关联的Service组件，默认:org.apache.catalina.core.StandardService的对象
+                // StandardService # getContainer方法获得的是:  org.apache.catalina.core.StandardEngine的对象
+                // StandardEngine # getPipeline 方法返回的是StandardEngine类的父类org.apache.catalina.core.ContainerBase类的成员变量pipeline
+                // connector.getService().getContainer().getPipeline()方法返回的是org.apache.catalina.core.StandardPipeline 类的对象
+                // 最后执行到：org.apache.catalina.core.StandardEngineValve#invoke()
                 // Calling the container
                 connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);
 
@@ -761,6 +768,8 @@ public class CoyoteAdapter implements Adapter {
             // This will map the the latest version by default
             connector.getMapper().map(serverName, decodedURI, version,
                                       request.getMappingData());
+
+            // todo  设置 context、wrapper
             request.setContext((Context) request.getMappingData().context);
             request.setWrapper((Wrapper) request.getMappingData().wrapper);
 

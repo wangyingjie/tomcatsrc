@@ -50,7 +50,7 @@ final class StandardWrapperValve
     public StandardWrapperValve() {
         super(true);
     }
-    
+
     // ----------------------------------------------------- Instance Variables
 
 
@@ -83,6 +83,8 @@ final class StandardWrapperValve
      *
      * @exception IOException if an input/output error occurred
      * @exception ServletException if a servlet error occurred
+     *
+     * Wrapper 里面就包装了 Servlet 的相关信息，最终会调用的 servlet 的 service 的处理接口
      */
     @Override
     public final void invoke(Request request, Response response)
@@ -94,10 +96,14 @@ final class StandardWrapperValve
         // This should be a Request attribute...
         long t1=System.currentTimeMillis();
         requestCount++;
+
+        // 获取容器
         StandardWrapper wrapper = (StandardWrapper) getContainer();
         Servlet servlet = null;
+
+        // 获取Context
         Context context = (Context) wrapper.getParent();
-        
+
         // Check for the application being marked unavailable
         if (!context.getState().isAvailable()) {
             response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
@@ -107,6 +113,7 @@ final class StandardWrapperValve
 
         // Check for the servlet being marked unavailable
         if (!unavailable && wrapper.isUnavailable()) {
+            // set  response  的部分属性
             container.getLogger().info(sm.getString("standardWrapper.isUnavailable",
                     wrapper.getName()));
             long available = wrapper.getAvailable();
@@ -126,6 +133,9 @@ final class StandardWrapperValve
         // Allocate a servlet instance to process this request
         try {
             if (!unavailable) {
+
+                // allocate ['æləkeɪt] vt. 分配；拨出；使坐落于
+                // TODO　获取 WEB 容器的 servlet 处理对象
                 servlet = wrapper.allocate();
             }
         } catch (UnavailableException e) {
@@ -164,10 +174,10 @@ final class StandardWrapperValve
             comet = true;
             request.setComet(true);
         }
-        
+
         MessageBytes requestPathMB = request.getRequestPathMB();
         DispatcherType dispatcherType = DispatcherType.REQUEST;
-        if (request.getDispatcherType()==DispatcherType.ASYNC) dispatcherType = DispatcherType.ASYNC; 
+        if (request.getDispatcherType()==DispatcherType.ASYNC) dispatcherType = DispatcherType.ASYNC;
         request.setAttribute(Globals.DISPATCHER_TYPE_ATTR,dispatcherType);
         request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR,
                 requestPathMB);
@@ -175,10 +185,9 @@ final class StandardWrapperValve
         ApplicationFilterFactory factory =
             ApplicationFilterFactory.getInstance();
 
-        // 创建过滤链
-        ApplicationFilterChain filterChain =
-            factory.createFilterChain(request, wrapper, servlet);
-        
+        // TODO　创建过滤链
+        ApplicationFilterChain filterChain = factory.createFilterChain(request, wrapper, servlet);
+
         // Reset comet flag value after creating the filter chain
         request.setComet(false);
 
@@ -198,8 +207,8 @@ final class StandardWrapperValve
                             filterChain.doFilterEvent(request.getEvent());
                             request.setComet(true);
                         } else {
-                            filterChain.doFilter(request.getRequest(), 
-                                    response.getResponse());
+                            // todo　执行filter
+                            filterChain.doFilter(request.getRequest(), response.getResponse());
                         }
                     } finally {
                         String log = SystemLogHandler.stopCapture();
@@ -214,8 +223,8 @@ final class StandardWrapperValve
                         request.setComet(true);
                         filterChain.doFilterEvent(request.getEvent());
                     } else {
-                        filterChain.doFilter
-                            (request.getRequest(), response.getResponse());
+                        // todo　执行filter
+                        filterChain.doFilter(request.getRequest(), response.getResponse());
                     }
                 }
 
@@ -323,7 +332,7 @@ final class StandardWrapperValve
     /**
      * Process a Comet event. The main differences here are to not use sendError
      * (the response is committed), to avoid creating a new filter chain
-     * (which would work but be pointless), and a few very minor tweaks. 
+     * (which would work but be pointless), and a few very minor tweaks.
      *
      * @param request The servlet request to be processed
      * @param response The servlet response to be created
@@ -336,13 +345,13 @@ final class StandardWrapperValve
     @Override
     public void event(Request request, Response response, CometEvent event)
         throws IOException, ServletException {
-        
+
         // Initialize local variables we may need
         Throwable throwable = null;
         // This should be a Request attribute...
         long t1=System.currentTimeMillis();
         // FIXME: Add a flag to count the total amount of events processed ? requestCount++;
-        
+
         StandardWrapper wrapper = (StandardWrapper) getContainer();
         if (wrapper == null) {
             // Context has been shutdown. Nothing to do here.
@@ -355,7 +364,7 @@ final class StandardWrapperValve
         // Check for the application being marked unavailable
         boolean unavailable = !context.getState().isAvailable() ||
                 wrapper.isUnavailable();
-        
+
         // Allocate a servlet instance to process this request
         try {
             if (!unavailable) {
@@ -383,7 +392,7 @@ final class StandardWrapperValve
         request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR,
                 requestPathMB);
         // Get the current (unchanged) filter chain for this request
-        ApplicationFilterChain filterChain = 
+        ApplicationFilterChain filterChain =
             (ApplicationFilterChain) request.getFilterChain();
 
         // Call the filter chain for this request
@@ -572,7 +581,7 @@ final class StandardWrapperValve
     public void setErrorCount(int errorCount) {
         this.errorCount = errorCount;
     }
-    
+
     @Override
     protected void initInternal() throws LifecycleException {
         // NOOP - Don't register this Valve in JMX

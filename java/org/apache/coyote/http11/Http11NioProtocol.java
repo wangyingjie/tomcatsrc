@@ -264,10 +264,14 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
 
         @Override
         public Http11NioProcessor createProcessor() {
+
+            // 设置 adapter 对象
             Http11NioProcessor processor = new Http11NioProcessor(
                     proto.getMaxHttpHeaderSize(), (NioEndpoint)proto.endpoint,
                     proto.getMaxTrailerSize(), proto.getAllowedTrailerHeadersAsSet(),
                     proto.getMaxExtensionSize(), proto.getMaxSwallowSize());
+
+            // 设置 adapter 对象
             processor.setAdapter(proto.adapter);
             processor.setMaxKeepAliveRequests(proto.getMaxKeepAliveRequests());
             processor.setKeepAliveTimeout(proto.getKeepAliveTimeout());
@@ -283,6 +287,7 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
             processor.setMaxSavePostSize(proto.getMaxSavePostSize());
             processor.setServer(proto.getServer());
             processor.setMaxCookieCount(proto.getMaxCookieCount());
+
             register(processor);
             return processor;
         }

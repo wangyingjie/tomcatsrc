@@ -612,6 +612,8 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                     processor = recycledProcessors.poll();
                 }
                 if (processor == null) {
+
+                    // 创建Processor  内部初始化了  Adapter 等属性
                     processor = createProcessor();
                 }
 

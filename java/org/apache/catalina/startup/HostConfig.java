@@ -284,6 +284,8 @@ public class HostConfig
      * Process the START event for an associated Host.
      *
      * @param event The lifecycle event that has occurred
+     *
+     * 监听容器
      */
     @Override
     public void lifecycleEvent(LifecycleEvent event) {
@@ -304,14 +306,17 @@ public class HostConfig
 
         // Process the event that has occurred
         if (event.getType().equals(Lifecycle.PERIODIC_EVENT)) {
+            // 检查 & 发布
             check();
         } else if (event.getType().equals(Lifecycle.BEFORE_START_EVENT)) {
             beforeStart();
         } else if (event.getType().equals(Lifecycle.START_EVENT)) {
+            // 发布项目
             start();
         } else if (event.getType().equals(Lifecycle.STOP_EVENT)) {
             stop();
         }
+
     }
 
 
@@ -457,19 +462,30 @@ public class HostConfig
     /**
      * Deploy applications for any directories or WAR files that are found
      * in our "application root" directory.
+     *
+     * 可参考：http://tyrion.iteye.com/blog/1944144
+     *
+     * 线程池处理发布
+     *
+     * 部署应用有三种方式：XML文件描述符、WAR包、文件目录
      */
     protected void deployApps() {
 
         File appBase = appBase();
         File configBase = configBase();
         String[] filteredAppPaths = filterAppPaths(appBase.list());
+
+        // 以下三种发布方式都是构建一个Context对象
+        // 并将构建好的Context对象与Host组件关联起来（即调用host.addChild(context)
+
         // Deploy XML descriptors from configBase
         deployDescriptors(configBase, configBase.list());
+
         // Deploy WARs
         deployWARs(appBase, filteredAppPaths);
+
         // Deploy expanded folders
         deployDirectories(appBase, filteredAppPaths);
-
     }
 
 
@@ -883,6 +899,7 @@ public class HostConfig
             }
         }
 
+        //
         Context context = null;
         try {
             if (deployXML && xml.exists() && unpackWARs && !copyXML) {
@@ -1063,6 +1080,8 @@ public class HostConfig
             context.setPath(cn.getPath());
             context.setWebappVersion(cn.getVersion());
             context.setDocBase(cn.getBaseName() + ".war");
+
+            //  将构建好的Context对象与Host组件关联起来
             host.addChild(context);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -1729,7 +1748,7 @@ public class HostConfig
                 checkUndeploy();
             }
 
-            // Hotdeploy applications
+            // Hotdeploy applications  发布应用
             deployApps();
         }
     }

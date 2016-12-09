@@ -67,8 +67,11 @@ public class StandardWrapper extends ContainerBase
     public StandardWrapper() {
 
         super();
-        swValve=new StandardWrapperValve();
+        swValve = new StandardWrapperValve();
+
+        // 初始化 pipeline 的基础阀  初始化的责任链节点
         pipeline.setBasic(swValve);
+
         broadcaster = new NotificationBroadcasterSupport();
 
     }
@@ -796,6 +799,8 @@ public class StandardWrapper extends ContainerBase
      * @exception ServletException if the servlet init() method threw
      *  an exception
      * @exception ServletException if a loading error occurs
+     *
+     * allocate ['æləkeɪt] vt. 分配；拨出；使坐落于
      */
     @Override
     public Servlet allocate() throws ServletException {
@@ -820,6 +825,8 @@ public class StandardWrapper extends ContainerBase
 
                             // Note: We don't know if the Servlet implements
                             // SingleThreadModel until we have loaded it.
+
+                            // TODO 加载 servlet 实例
                             instance = loadServlet();
                             newInstance = true;
                             if (!singleThreadModel) {
@@ -1100,7 +1107,10 @@ public class StandardWrapper extends ContainerBase
 
             InstanceManager instanceManager = ((StandardContext)getParent()).getInstanceManager();
             try {
+
+                //TODO 获取 servlet 对象
                 servlet = (Servlet) instanceManager.newInstance(servletClass);
+
             } catch (ClassCastException e) {
                 unavailable(null);
                 // Restore the context ClassLoader
@@ -1149,6 +1159,7 @@ public class StandardWrapper extends ContainerBase
                 singleThreadModel = true;
             }
 
+            // TODO　Servlet 初始化
             initServlet(servlet);
 
             fireContainerEvent("load", this);
@@ -1237,7 +1248,7 @@ public class StandardWrapper extends ContainerBase
                 }
             } else {
 
-                // 初始化 servlet
+                //TODO  初始化 servlet
                 servlet.init(facade);
             }
 

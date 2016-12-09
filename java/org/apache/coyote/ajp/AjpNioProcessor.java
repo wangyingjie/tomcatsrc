@@ -149,6 +149,8 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
                 // Setting up filters, and parse some request headers
                 rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);
                 try {
+
+                    // 准备 request
                     prepareRequest();
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
@@ -172,6 +174,8 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
             if (!getErrorState().isError()) {
                 try {
                     rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
+
+                    // TODO　通过适配器调用 service 方法
                     adapter.service(request, response);
                 } catch (InterruptedIOException e) {
                     setErrorState(ErrorState.CLOSE_NOW, e);

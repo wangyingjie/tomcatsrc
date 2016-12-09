@@ -119,6 +119,10 @@ final class StandardContextValve extends ValveBase {
         if (request.isAsyncSupported()) {
             request.setAsyncSupported(wrapper.getPipeline().isAsyncSupported());
         }
+
+        // 责任链模式：将请求传递给 Wrapper 管道
+        // 从请求对象中取出该请求关联的 Wrapper（默认情况下是org.apache.catalina.core.StandardWrapper对象）,
+        // StandardWrapper对象 初始化的时候会设置基础阀 StandardWrapperValve
         wrapper.getPipeline().getFirst().invoke(request, response);
     }
 

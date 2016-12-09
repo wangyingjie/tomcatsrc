@@ -1305,6 +1305,12 @@ public class WebXml {
      * Configure a {@link Context} using the stored web.xml representation.
      *
      * @param context   The context to be configured
+     *
+     * web.xml 中的配置信息最终都将被设置到  context 对应的属性当中
+     * 真正在一次请求访问中用到的Servlet、Listener、Filter的实例并没有构造出来，
+     * 以上方法调用仅构造了代表这些实例的封装类的实例，如StandardWrapper、ApplicationListener、FilterDef、FilterMap。
+     *
+     * 参考文章：http://tyrion.iteye.com/blog/1944285
      */
     public void configureContext(Context context) {
         // As far as possible, process in alphabetical order so it is easy to
@@ -1333,6 +1339,8 @@ public class WebXml {
         for (ErrorPage errorPage : errorPages.values()) {
             context.addErrorPage(errorPage);
         }
+
+        // 将 filter 的配置与context进行关联
         for (FilterDef filter : filters.values()) {
             if (filter.getAsyncSupported() == null) {
                 filter.setAsyncSupported("false");
@@ -1348,6 +1356,8 @@ public class WebXml {
             context.getJspConfigDescriptor().getJspPropertyGroups().add(
                     descriptor);
         }
+
+        // 将 listener 的配置与context进行关联
         for (String listener : listeners) {
             context.addApplicationListener(listener);
         }
@@ -1385,6 +1395,8 @@ public class WebXml {
         for (ContextService service : serviceRefs.values()) {
             context.getNamingResources().addService(service);
         }
+
+        // 将 servlet 的配置与context进行关联
         for (ServletDef servlet : servlets.values()) {
             Wrapper wrapper = context.createWrapper();
             // Description is ignored
@@ -1432,11 +1444,14 @@ public class WebXml {
                         servlet.getAsyncSupported().booleanValue());
             }
             wrapper.setOverridable(servlet.isOverridable());
+
+            // 将servlet添加到 context 里面
             context.addChild(wrapper);
         }
         for (Entry<String, String> entry : servletMappings.entrySet()) {
             context.addServletMapping(entry.getKey(), entry.getValue());
         }
+
         if (sessionConfig != null) {
             if (sessionConfig.getSessionTimeout() != null) {
                 context.setSessionTimeout(

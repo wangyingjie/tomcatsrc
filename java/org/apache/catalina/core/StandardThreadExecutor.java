@@ -29,6 +29,11 @@ import org.apache.tomcat.util.threads.TaskQueue;
 import org.apache.tomcat.util.threads.TaskThreadFactory;
 import org.apache.tomcat.util.threads.ThreadPoolExecutor;
 
+/**
+ * Tomcat 容器中用到的核心线程池处理类
+ *
+ * 该线程池实现了 java.util.concurrent.Executor  接口
+ */
 public class StandardThreadExecutor extends LifecycleMBeanBase
         implements Executor, ResizableExecutor {
     

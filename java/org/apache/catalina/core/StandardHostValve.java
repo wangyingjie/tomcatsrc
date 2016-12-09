@@ -166,6 +166,10 @@ final class StandardHostValve extends ValveBase {
             // defined error pages.
             try {
                 if (!asyncAtStart || asyncDispatching) {
+
+                    // 责任链模式：将请求传递给 context 管道
+                    // 从请求对象中取出该请求关联的context （默认情况下是org.apache.catalina.core.StandardContext对象）,
+                    // StandardContext对象 初始化的时候会设置基础阀 StandardContextValve
                     context.getPipeline().getFirst().invoke(request, response);
                 } else {
                     // Make sure this request/response is here because an error

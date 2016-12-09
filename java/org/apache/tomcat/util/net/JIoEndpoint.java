@@ -217,6 +217,8 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
 
                     Socket socket = null;
                     try {
+
+                        // 此处用来接收 请求 监听客户端连接
                         // Accept the next incoming connection from the server
                         // socket
                         socket = serverSocketFactory.acceptSocket(serverSocket);
@@ -232,9 +234,14 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
 
                     // Configure the socket
                     if (running && !paused && setSocketOptions(socket)) {
+
+                        // TODO 监听到连接后（即浏览器向服务器发起一次请求）
                         // Hand this socket off to an appropriate processor
                         if (!processSocket(socket)) {
+
                             countDownConnection();
+
+                            // 关闭 socket 链接
                             // Close socket right away
                             closeSocket(socket);
                         }
@@ -276,6 +283,9 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
     /**
      * This class is the equivalent of the Worker, but will simply use in an
      * external Executor thread pool.
+     *
+     * 该类就完成了一次 tcp 交互到 Http 的转化
+     * 最终会产生出  request、response 对象
      */
     protected class SocketProcessor implements Runnable {
 
@@ -311,8 +321,11 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                         state = SocketState.CLOSED;
                     }
 
-                    if ((state != SocketState.CLOSED)) {
+                    if ((state != SocketState.CLOSED)) {// 非关闭状态
                         if (status == null) {
+                            // 调用handler对象的process方法，
+                            // 这里handler对象实际上是Http11ConnectionHandler类的实例，
+                            // 该对象的初始化过程是在org.apache.coyote.http11.Http11Protocol对象的构造方法中：
                             state = handler.process(socket, SocketStatus.OPEN_READ);
                         } else {
                             state = handler.process(socket,status);
@@ -520,6 +533,8 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
      *                  if the endpoint is shutting down. Returning
      *                  <code>false</code> is an indication to close the socket
      *                  immediately.
+     *
+     *  处理服务器监听到的一次客户端链接，并处理相关请求
      */
     protected boolean processSocket(Socket socket) {
         // Process the request from this socket

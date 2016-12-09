@@ -162,6 +162,8 @@ public class WebappLoader extends LifecycleMBeanBase
 
     /**
      * The reloadable flag for this Loader.
+     *
+     * tomcat 的自动加载的属性
      */
     private boolean reloadable = false;
 
@@ -422,6 +424,9 @@ public class WebappLoader extends LifecycleMBeanBase
                 Thread.currentThread().setContextClassLoader
                     (WebappLoader.class.getClassLoader());
                 if (container instanceof StandardContext) {
+
+                    // todo 其中reloadable变量的值就是本文开始提到的配置文件的Context节点的reloadable属性的值，
+                    // 当它为true并且modified()方法返回也是true时就会执行StandardContext的reload方法：
                     ((StandardContext) container).reload();
                 }
             } finally {
