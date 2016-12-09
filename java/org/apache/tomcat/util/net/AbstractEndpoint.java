@@ -699,12 +699,12 @@ public abstract class AbstractEndpoint<S> {
             acceptors[i] = createAcceptor();
             String threadName = getName() + "-Acceptor-" + i;
             acceptors[i].setThreadName(threadName);
-            /*Thread t = new Thread(acceptors[i], threadName);
+            Thread t = new Thread(acceptors[i], threadName);
             t.setPriority(getAcceptorThreadPriority());
             t.setDaemon(getDaemon());
-            t.start();*/
+            t.start();
 
-            acceptors[i].run();
+            //acceptors[i].run();
         }
     }
 
